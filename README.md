@@ -1,4 +1,4 @@
-# Project Monorepo
+# Superepo - A turborepo setup with backend and frontend
 
 ## Overview
 
