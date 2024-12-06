@@ -33,7 +33,7 @@ To run both web and API applications simultaneously:
 pnpm run dev
 ```
 
-### Adding Shadcn/UI Components
+### Adding shadcn/ui Components
 
 To add a new shadcn/ui component to the web project:
 
