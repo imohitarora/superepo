@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from "@workspace/ui/lib/utils"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -10,6 +12,9 @@ import {
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { navigate } from "@/app/(auth)/login/actions"
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { useRouter } from 'next/navigation'
 
 interface AuthFormProps {
   path: string
@@ -20,7 +25,57 @@ export function AuthForm({
   path,
   ...props
 }: React.ComponentPropsWithoutRef<"div"> & AuthFormProps) {
+  const router = useRouter()
   const isLogin = path === "login"
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    if (isLogin) {
+      // Handle Sign In
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: "/dashboard"
+      })
+
+      if (result?.error) {
+        setError(result.error)
+      } else if (result?.url) {
+        router.push(result.url)
+      }
+    } else {
+      // Handle Sign Up
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        })
+
+        if (res.ok) {
+          // After successful signup, sign in automatically
+          const result = await signIn("credentials", {
+            email,
+            password,
+            redirect: false,
+            callbackUrl: "/dashboard"
+          })
+          if (result?.url) router.push(result.url)
+        } else {
+          const data = await res.json()
+          setError(data.message || 'Something went wrong')
+        }
+      } catch (err) {
+        setError('Failed to register')
+      }
+    }
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -36,7 +91,7 @@ export function AuthForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={navigate}>
+          <form onSubmit={handleSubmit}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 <Button variant="outline" className="w-full">
@@ -72,6 +127,8 @@ export function AuthForm({
                     type="email"
                     placeholder="m@example.com"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -86,12 +143,20 @@ export function AuthForm({
                       </a>
                     )}
                   </div>
-                  <Input id="password" name="password" type="password" required />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
                 <Button type="submit" className="w-full">
                   {isLogin ? "Login" : "Sign up"}
                 </Button>
               </div>
+              {error && <div className="text-red-500 text-center text-sm mb-4">{error}</div>}
               <div className="text-center text-sm">
                 {isLogin ? (
                   <>
