@@ -1,65 +1,31 @@
-# Superepo - A turborepo setup with backend and frontend
+# shadcn/ui monorepo template
 
-## Overview
+This template is for creating a monorepo with shadcn/ui.
 
-This is a Turborepo monorepo setup containing two main applications:
-
-- `web`: A Next.js frontend application
-- `api`: A NestJS backend application
-
-## Prerequisites
-
-- Node.js (recommended version: 18.x or later)
-- pnpm (Package manager)
-
-## Setup
-
-### Initial Installation
-
-1. Clone the repository
-2. Install dependencies:
+## Usage
 
 ```bash
-pnpm install
+pnpm dlx shadcn@latest init
 ```
 
-## Development
+## Adding components
 
-### Running the Project
-
-To run both web and API applications simultaneously:
+To add components to your app, run the following command at the root of your `web` app:
 
 ```bash
-pnpm run dev
+pnpm dlx shadcn@latest add button -c apps/web
 ```
 
-### Adding shadcn/ui Components
+This will place the ui components in the `packages/ui/src/components` directory.
 
-To add a new shadcn/ui component to the web project:
+## Tailwind
 
-```bash
-pnpm dlx shadcn-ui@latest add <component-name> -c ./apps/web
+Your `tailwind.config.ts` and `globals.css` are already set up to use the components from the `ui` package.
+
+## Using components
+
+To use the components in your app, import them from the `ui` package.
+
+```tsx
+import { Button } from "@workspace/ui/components/ui/button"
 ```
-
-## Project Structure
-
-- `/apps/web`: Next.js frontend application
-- `/apps/api`: NestJS backend application
-- `turbo.json`: Turborepo configuration
-
-## Recommended VS Code Extensions
-
-- ESLint
-- Prettier
-- TypeScript
-
-## Scripts
-
-- `pnpm run dev`: Start development servers for web and API
-- `pnpm run build`: Build all applications
-- `pnpm run lint`: Run linters across the project
-- `pnpm run test`: Run tests for all applications
-
-## Environment Variables
-
-Create `.env` files in respective app directories for environment-specific configurations.
