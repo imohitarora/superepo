@@ -1,6 +1,7 @@
 import { GalleryVerticalEnd } from "lucide-react"
 
-import { LoginForm } from "@/components/login-form"
+import { AuthForm } from "@/components/auth-form"
+import Link from "next/link"
 
 export default function LoginPage() {
   return (
@@ -10,9 +11,9 @@ export default function LoginPage() {
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <GalleryVerticalEnd className="size-4" />
           </div>
-          Acme Inc.
+          Gracensity Inc.
         </a>
-        <LoginForm />
+        <AuthForm path="register" />
       </div>
     </div>
   )
