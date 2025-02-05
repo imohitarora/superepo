@@ -29,7 +29,7 @@ import {
 // This is sample data.
 const data = {
   user: {
-    name: "shadcn",
+    name: "mohit",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
@@ -59,11 +59,11 @@ const data = {
       items: [
         {
           title: "History",
-          url: "#",
+          url: "/loans",
         },
         {
           title: "Starred",
-          url: "#",
+          url: "/dashboard",
         },
         {
           title: "Settings",

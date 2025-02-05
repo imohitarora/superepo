@@ -11,7 +11,6 @@ import {
 } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { navigate } from "@/app/(auth)/login/actions"
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from 'next/navigation'
