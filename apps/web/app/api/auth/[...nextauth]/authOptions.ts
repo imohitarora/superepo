@@ -2,8 +2,10 @@ import { SessionStrategy } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials"
 import GitHubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
+import { AuthOptions } from "next-auth";
+import { JWT } from "next-auth/jwt";
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -19,28 +21,109 @@ export const authOptions = {
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
             },
-            async authorize(credentials, req) {
-                const user = { id: "1", name: "J Smith", email: "jsmith@example.com" }
-                if (user) {
-                    return user
-                } else {
-                    return null
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    throw new Error('Please enter both email and password');
+                }
+                
+                try {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_SERVER}/auth/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: credentials.email,
+                            password: credentials.password,
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Authentication failed');
+                    }
+
+                    // Ensure all required fields are present
+                    if (!data.user?.id || !data.user?.email || !data.access_token) {
+                        throw new Error('Invalid response from server');
+                    }
+
+                    return {
+                        id: data.user.id.toString(),
+                        email: data.user.email,
+                        name: data.user.email, // Using email as name
+                        accessToken: data.access_token,
+                    };
+                } catch (error: any) {
+                    throw new Error(error.message || 'Authentication failed');
                 }
             }
         }),
     ],
-    session: { strategy: 'jwt' as SessionStrategy },
+    session: { 
+        strategy: 'jwt' as SessionStrategy,
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
     callbacks: {
-        async jwt({ token, user }: { token: any, user?: any }) {
-            if (user) token.id = user.id;
-            return token;
+        async jwt({ token, user }) {
+            if (user) {
+                // Update token when signing in
+                token.id = user.id;
+                token.email = user.email;
+                token.name = user.name;
+                token.accessToken = user.accessToken;
+            }
+            // Ensure token always has required fields
+            return {
+                ...token,
+                id: token.id,
+                email: token.email,
+                name: token.name,
+                accessToken: token.accessToken,
+            } as JWT;
         },
-        async session({ session, token }: { session: any, token: any }) {
-            if (session.user) session.user.id = token.id;
-            return session;
+        async session({ session, token }) {
+            // Ensure session user always has required fields
+            return {
+                ...session,
+                user: {
+                    id: token.id,
+                    email: token.email,
+                    name: token.name,
+                    token: token.accessToken as string,
+                },
+            };
         },
     },
     pages: {
         signIn: '/login',
-    }
+        error: '/login',
+    },
+    events: {
+        async signIn({ user }) {
+            if (user) {
+                console.log('Successful sign-in', {
+                    userId: user.id,
+                    email: user.email,
+                });
+            }
+        },
+        async signOut({ session }) {
+            if (session?.user) {
+                console.log('Sign out', { 
+                    userId: session.user.id,
+                    email: session.user.email 
+                });
+            }
+        },
+        async session({ session }) {
+            if (session?.user) {
+                console.log('Session update', {
+                    userId: session.user.id,
+                    email: session.user.email
+                });
+            }
+        }
+    },
 }
