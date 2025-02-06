@@ -4,13 +4,53 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterResponse, LoginResponse, ProfileResponse } from './dto/auth.response';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User successfully registered',
+    type: RegisterResponse,
+  })
+  @ApiResponse({ 
+    status: 409, 
+    description: 'Email already exists',
+    schema: {
+      example: {
+        status: 409,
+        message: 'Email already exists',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid input',
+    schema: {
+      example: {
+        status: 400,
+        message: 'Validation failed',
+        errors: [
+          'email must be a valid email',
+          'password must be at least 6 characters long',
+        ],
+      },
+    },
+  })
+  async register(@Body() registerDto: RegisterDto): Promise<RegisterResponse> {
     try {
       const user = await this.authService.register(registerDto.email, registerDto.password);
       return {
@@ -36,7 +76,24 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req) {
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User successfully logged in',
+    type: LoginResponse,
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Invalid credentials',
+    schema: {
+      example: {
+        status: 401,
+        message: 'Invalid credentials',
+      },
+    },
+  })
+  async login(@Request() req): Promise<LoginResponse> {
     try {
       const result = await this.authService.login(req.user);
       return {
@@ -57,7 +114,24 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+    type: ProfileResponse,
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized',
+    schema: {
+      example: {
+        status: 401,
+        message: 'Unauthorized',
+      },
+    },
+  })
+  getProfile(@Request() req): ProfileResponse {
     return {
       user: {
         id: req.user.userId,
