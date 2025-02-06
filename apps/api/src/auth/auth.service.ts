@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { TenantsService } from '../tenants/tenants.service';
 import * as bcrypt from 'bcrypt';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -101,5 +102,29 @@ export class AuthService {
       message: 'Profile updated successfully',
       user: result
     };
+  }
+
+  async updatePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findOne(userId);
+    if (!user) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        message: 'User not found',
+      }, HttpStatus.NOT_FOUND);
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new HttpException({
+        status: HttpStatus.UNAUTHORIZED,
+        message: 'Current password is incorrect',
+      }, HttpStatus.UNAUTHORIZED);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.update({
+      ...user,
+      password: hashedPassword,
+    });
   }
 }

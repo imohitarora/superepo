@@ -11,11 +11,20 @@ import {
 } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import { toast } from "@workspace/ui/hooks/use-toast"
 import { settingsApi } from "../api/settings"
+import { InviteUserData } from "@/services/api-service"
 
 export function InviteForm() {
   const [email, setEmail] = useState("")
+  const [role, setRole] = useState<"admin" | "user">("user")
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,12 +32,16 @@ export function InviteForm() {
     setLoading(true)
 
     try {
-      const response = await settingsApi.inviteUser({ email })
+      const response = await settingsApi.inviteUser({
+        email,
+        role,
+      } as InviteUserData)
       toast({
         title: "Success",
         description: response.message || "Invitation sent successfully.",
       })
       setEmail("")
+      setRole("user")
     } catch (error) {
       toast({
         title: "Error",
@@ -60,6 +73,24 @@ export function InviteForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select
+              value={role}
+              onValueChange={(value: "admin" | "user") => setRole(value)}
+            >
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              Admins can manage team members and settings.
+            </p>
           </div>
           <Button type="submit" disabled={loading}>
             {loading ? "Sending..." : "Send Invitation"}

@@ -133,8 +133,7 @@ export function TeamList() {
                   <Badge variant={member.roles.includes("admin") ? "default" : "secondary"}>
                     {member.roles.includes("admin") ? "Admin" : "User"}
                   </Badge>
-                  {/* Hide management options until API endpoints are implemented */}
-                  {/* {isAdmin && currentUser?.id !== member.id && (
+                  {isAdmin && currentUser?.id !== member.id && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -166,10 +165,15 @@ export function TeamList() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  )} */}
+                  )}
                 </div>
               </div>
             ))}
+            {teamMembers.length === 0 && (
+              <div className="text-center py-4 text-sm text-muted-foreground">
+                No team members found.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

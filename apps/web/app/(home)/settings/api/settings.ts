@@ -1,5 +1,4 @@
 import { apiCall } from "@/services/api-service"
-import { mockSettingsApi } from "./mock-settings"
 
 export interface User {
   id: string
@@ -37,9 +36,6 @@ export interface InviteResponse {
   }
 }
 
-// Use mock API if NEXT_PUBLIC_USE_MOCK_API is true
-const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === 'true'
-
 const realSettingsApi = {
   // Profile
   getProfile: async () => {
@@ -54,7 +50,8 @@ const realSettingsApi = {
 
   // Password
   updatePassword: async (data: UpdatePasswordData) => {
-    throw new Error("Not implemented")
+    await apiCall<{ message: string }>("/auth/password", "PATCH", data)
+    return null
   },
 
   // Team Management
@@ -78,14 +75,25 @@ const realSettingsApi = {
     return null
   },
 
-  // These endpoints don't exist yet in the real API
   changeUserRole: async (userId: string, newRole: "admin" | "user") => {
-    throw new Error("Not implemented")
+    await apiCall<{ message: string }>(`/tenants/users/${userId}/role`, "PATCH", { role: newRole })
+    return null
   },
 
   removeTeamMember: async (userId: string) => {
-    throw new Error("Not implemented")
+    await apiCall<{ message: string }>(`/tenants/users/${userId}`, "DELETE")
+    return null
+  },
+
+  getPendingInvitations: async () => {
+    const response = await apiCall<any[]>("/tenants/invitations", "GET")
+    return response
+  },
+
+  resendInvitation: async (invitationId: string) => {
+    const response = await apiCall<{ message: string }>(`/tenants/invitations/${invitationId}/resend`, "POST")
+    return response
   },
 }
 
-export const settingsApi = useMockApi ? mockSettingsApi : realSettingsApi
+export const settingsApi = realSettingsApi

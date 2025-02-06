@@ -1,11 +1,12 @@
-import { Controller, Post, Body, UseGuards, Request, Get, Param, HttpCode } from '@nestjs/common';
-import { TenantsService } from './tenants.service';
+import { Controller, Post, Body, UseGuards, Request, Get, Param, HttpCode, Patch, Delete } from '@nestjs/common';
+import { TenantsService, InvitationResponse } from './tenants.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @ApiTags('Tenants')
 @Controller('tenants')
@@ -121,5 +122,71 @@ export class TenantsController {
   })
   async validateInvitation(@Param('token') token: string) {
     return this.tenantsService.validateInvitation(token);
+  }
+
+  @Get('invitations')
+  @UseGuards(JwtAuthGuard)
+  async getPendingInvitations(@Request() req) {
+    const user = req.user;
+    return this.tenantsService.getPendingInvitations(user.tenantId);
+  }
+
+  @Post('invitations/:id/resend')
+  @UseGuards(JwtAuthGuard)
+  async resendInvitation(
+    @Request() req,
+    @Param('id') invitationId: string,
+  ): Promise<InvitationResponse> {
+    const user = req.user;
+    return this.tenantsService.resendInvitation(invitationId, user.tenantId);
+  }
+
+  @Patch('users/:userId/role')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Update user role' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User role updated successfully',
+    schema: {
+      properties: {
+        message: { type: 'string' }
+      }
+    }
+  })
+  async updateUserRole(
+    @Request() req,
+    @Param('userId') userId: string,
+    @Body() updateUserRoleDto: UpdateUserRoleDto,
+  ) {
+    await this.tenantsService.updateUserRole(
+      req.user.tenantId,
+      userId,
+      updateUserRoleDto.role,
+    );
+    return { message: 'User role updated successfully' };
+  }
+
+  @Delete('users/:userId')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Remove user from tenant' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User removed successfully',
+    schema: {
+      properties: {
+        message: { type: 'string' }
+      }
+    }
+  })
+  async removeUser(
+    @Request() req,
+    @Param('userId') userId: string,
+  ) {
+    await this.tenantsService.removeUser(
+      req.user.tenantId,
+      userId,
+      req.user.userId,
+    );
+    return { message: 'User removed successfully' };
   }
 }

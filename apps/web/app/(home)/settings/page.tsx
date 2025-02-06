@@ -5,6 +5,8 @@ import { ProfileForm } from "./components/profile-form"
 import { PasswordForm } from "./components/password-form"
 import { InviteForm } from "./components/invite-form"
 import { TeamList } from "./components/team-list"
+import { Separator } from "@workspace/ui/components/separator"
+import { PendingInvitations } from "./components/pending-invitations"
 
 export default function SettingsPage() {
   return (
@@ -51,13 +53,20 @@ export default function SettingsPage() {
           <TeamList />
         </TabsContent>
         <TabsContent value="invite" className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium">Invite Team Members</h3>
-            <p className="text-sm text-muted-foreground">
-              Invite new team members and manage roles.
-            </p>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Team Members</h3>
+              <p className="text-sm text-muted-foreground">
+                Invite new members to join your team.
+              </p>
+            </div>
+            <Separator />
+            <InviteForm />
+            <div className="mt-6">
+              <h4 className="text-sm font-medium mb-4">Pending Invitations</h4>
+              <PendingInvitations />
+            </div>
           </div>
-          <InviteForm />
         </TabsContent>
       </Tabs>
     </div>

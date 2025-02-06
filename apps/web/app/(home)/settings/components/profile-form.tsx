@@ -5,7 +5,6 @@ import { Button } from "@workspace/ui/components/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
@@ -14,8 +13,6 @@ import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { toast } from "@workspace/ui/hooks/use-toast"
 import { settingsApi, User } from "../api/settings"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
-import { InfoIcon } from "lucide-react"
 
 export function ProfileForm() {
   const [loading, setLoading] = useState(true)
@@ -81,17 +78,8 @@ export function ProfileForm() {
     <Card>
       <CardHeader>
         <CardTitle>Profile</CardTitle>
-        <CardDescription>
-          View and manage your profile settings.
-        </CardDescription>
       </CardHeader>
       <CardContent>
-        <Alert>
-          <InfoIcon className="h-4 w-4" />
-          <AlertDescription>
-            Profile customization is coming soon! You'll be able to update your name, bio, and other details.
-          </AlertDescription>
-        </Alert>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Email</Label>
@@ -100,37 +88,26 @@ export function ProfileForm() {
               value={user?.email || ""}
               disabled
             />
-            <p className="text-sm text-muted-foreground">
-              Your email address is used for login and notifications.
-            </p>
           </div>
-
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
-              type="text"
-              placeholder="Enter your name"
+              id="name"
               value={form.name}
-              onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Enter your name"
             />
-            <p className="text-sm text-muted-foreground">
-              Your name as you'd like others to see it.
-            </p>
           </div>
-
           <div className="space-y-2">
-            <Label>Bio</Label>
+            <Label htmlFor="bio">Bio</Label>
             <Textarea
-              placeholder="Tell us about yourself"
+              id="bio"
               value={form.bio}
-              onChange={(e) => setForm(prev => ({ ...prev, bio: e.target.value }))}
-              className="h-32"
+              onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              placeholder="Tell us about yourself"
+              rows={4}
             />
-            <p className="text-sm text-muted-foreground">
-              A brief description about yourself that others will see.
-            </p>
           </div>
-
           <Button type="submit" disabled={saving}>
             {saving ? "Saving..." : "Save Changes"}
           </Button>

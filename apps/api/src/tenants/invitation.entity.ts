@@ -34,8 +34,13 @@ export class Invitation {
   @Column({ unique: true })
   token: string;
 
+  @ApiProperty({ example: '2025-02-13', description: 'Invitation expiry date' })
   @Column({ type: 'timestamp' })
   expiresAt: Date;
+
+  @ApiProperty({ example: 'user', description: 'Role for the invited user' })
+  @Column({ default: 'user' })
+  role: 'admin' | 'user';
 
   @CreateDateColumn()
   createdAt: Date;

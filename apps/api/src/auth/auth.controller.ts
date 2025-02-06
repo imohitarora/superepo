@@ -5,6 +5,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -174,5 +175,29 @@ export class AuthController {
         message: 'Failed to update profile',
       }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @Patch('password')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update user password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password updated successfully',
+    schema: {
+      properties: {
+        message: { type: 'string' }
+      }
+    }
+  })
+  async updatePassword(
+    @Request() req,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    await this.authService.updatePassword(
+      req.user.userId,
+      updatePasswordDto.currentPassword,
+      updatePasswordDto.newPassword,
+    );
+    return { message: 'Password updated successfully' };
   }
 }

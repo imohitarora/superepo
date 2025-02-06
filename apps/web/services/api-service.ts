@@ -1,5 +1,10 @@
 import { getSession } from 'next-auth/react';
 
+export interface InviteUserData {
+    email: string;
+    role: 'admin' | 'user';
+}
+
 export async function apiCall<T>(endpoint: string, method: string = 'GET', body?: any): Promise<T> {
     const session = await getSession(); // Get NextAuth session
 
@@ -14,7 +19,6 @@ export async function apiCall<T>(endpoint: string, method: string = 'GET', body?
             Authorization: `Bearer ${session.user.token}`, // Attach token from NextAuth session
         },
         body: body ? JSON.stringify(body) : undefined,
-        credentials: 'include',
     });
 
     if (!res.ok) {
