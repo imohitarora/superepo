@@ -47,7 +47,7 @@ export default async function HomeLayout({ children }: Readonly<{
                             </div>
                         </div>
                     </header>
-                    {children}
+                    <main className="flex-1 space-y-4 p-8 pt-6">{children}</main>
                 </SidebarInset>
             </SidebarProvider>
         </ProtectedLayout>

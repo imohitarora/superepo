@@ -1,131 +1,137 @@
 "use client"
 
-import { usePathname } from "next/navigation"
-import Link from "next/link"
-import { cn } from "@workspace/ui/lib/utils"
-import { Card, CardContent } from "@workspace/ui/components/card"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+
 import { Button } from "@workspace/ui/components/button"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form"
 import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
-import { Separator } from "@workspace/ui/components/separator"
-import { User, Key, Users, Mail } from "lucide-react"
+import { Textarea } from "@workspace/ui/components/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
+import { toast } from "@workspace/ui/hooks/use-toast"
 
-const settingsTabs = [
-  {
-    name: "Profile",
-    href: "/settings",
-    icon: User,
-  },
-  {
-    name: "Password",
-    href: "/settings/password",
-    icon: Key,
-  },
-  {
-    name: "Team",
-    href: "/settings/users",
-    icon: Users,
-  },
-  {
-    name: "Invites",
-    href: "/settings/invites",
-    icon: Mail,
-  },
-]
+const profileFormSchema = z.object({
+  username: z
+    .string()
+    .min(2, {
+      message: "Username must be at least 2 characters.",
+    })
+    .max(30, {
+      message: "Username must not be longer than 30 characters.",
+    }),
+  email: z
+    .string({
+      required_error: "Please select an email to display.",
+    })
+    .email(),
+  bio: z.string().max(160).min(4),
+  urls: z
+    .array(
+      z.object({
+        value: z.string().url({ message: "Please enter a valid URL." }),
+      }),
+    )
+    .optional(),
+})
 
-export default function SettingsPage() {
-  const pathname = usePathname()
+type ProfileFormValues = z.infer<typeof profileFormSchema>
+
+// This can come from your database or API.
+const defaultValues: Partial<ProfileFormValues> = {
+  bio: "I own a computer.",
+  urls: [{ value: "https://shadcn.com" }, { value: "http://twitter.com/shadcn" }],
+}
+
+export default function SettingsProfilePage() {
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues,
+    mode: "onChange",
+  })
+
+  function onSubmit(data: ProfileFormValues) {
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    })
+  }
 
   return (
-    <div className="grid gap-6 p-4 md:p-6 pt-0">
-      {/* Profile Settings */}
-      <div className="grid gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <form className="space-y-6">
-              <div>
-                <h2 className="text-lg font-semibold">Profile Information</h2>
-                <p className="text-sm text-muted-foreground">
-                  Update your personal information and email address
-                </p>
-              </div>
-              <Separator />
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter your name"
-                    defaultValue="Mohit Arora"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    defaultValue="mohit@example.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    placeholder="Choose a username"
-                    defaultValue="mohitarora"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    defaultValue="+1 (555) 000-0000"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button>Save Changes</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <form className="space-y-6">
-              <div>
-                <h2 className="text-lg font-semibold">Notifications</h2>
-                <p className="text-sm text-muted-foreground">
-                  Configure how you receive notifications and alerts
-                </p>
-              </div>
-              <Separator />
-              <div className="grid gap-4">
-                {[
-                  "Email notifications for payments",
-                  "SMS alerts for due dates",
-                  "Browser notifications for updates",
-                ].map((item) => (
-                  <div key={item} className="flex items-center justify-between">
-                    <div>
-                      <Label>{item}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive notifications when there are updates
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Configure
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+    <>
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
       </div>
-    </div>
+      <div className="max-w-2xl">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="shadcn" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    This is your public display name. It can be your real name or a pseudonym. You can only change this
+                    once every 30 days.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a verified email to display" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="m@example.com">m@example.com</SelectItem>
+                      <SelectItem value="m@google.com">m@google.com</SelectItem>
+                      <SelectItem value="m@support.com">m@support.com</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    You can manage verified email addresses in your <a href="/examples/forms">email settings</a>.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="bio"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bio</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Tell us a little bit about yourself" className="resize-none" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    You can <span>@mention</span> other users and organizations to link to them.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Update profile</Button>
+          </form>
+        </Form>
+      </div>
+    </>
   )
 }
+
