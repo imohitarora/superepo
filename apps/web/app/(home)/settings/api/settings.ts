@@ -42,7 +42,7 @@ const realSettingsApi = {
     const response = await apiCall<{ message: string; user: User }>("/auth/profile")
     return response.user
   },
-  
+
   updateProfile: async (data: UpdateProfileData) => {
     const response = await apiCall<{ message: string; user: User }>("/auth/profile", "PATCH", data)
     return response.user
@@ -59,17 +59,18 @@ const realSettingsApi = {
     const response = await apiCall<{ users: User[] }>("/tenants/users")
     return response
   },
-  
+
   inviteUser: async (data: InviteUserData) => {
     const response = await apiCall<InviteResponse>("/tenants/invite", "POST", data)
+    console.log('InviteResponse', response)
     return response
   },
-  
+
   validateInvitation: async (token: string) => {
     const response = await apiCall<{ message: string }>(`/tenants/validate-invitation/${token}`)
     return response.message
   },
-  
+
   acceptInvitation: async (token: string) => {
     const response = await apiCall<{ message: string }>(`/tenants/accept-invitation/${token}`, "POST")
     return response.message

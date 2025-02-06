@@ -31,7 +31,7 @@ export class TenantsService {
     private invitationsRepository: Repository<Invitation>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async createTenant(dto: CreateTenantDto): Promise<Tenant> {
     const tenant = this.tenantsRepository.create({
@@ -60,7 +60,7 @@ export class TenantsService {
 
     // Create invitation with token
     const invitationToken = uuidv4();
-    
+
     const invitation = this.invitationsRepository.create({
       email: dto.email,
       tenantId: dto.tenantId,
@@ -74,8 +74,8 @@ export class TenantsService {
     const savedInvitation = await this.invitationsRepository.save(invitation);
 
     // Generate invitation URL using the token
-    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/join?token=${invitationToken}`;
-    
+    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/register?invitationToken=${invitationToken}`;
+
     // Return the saved invitation with the URL
     return {
       ...savedInvitation,
@@ -134,7 +134,7 @@ export class TenantsService {
   async updateUserRole(tenantId: string, userId: string, newRole: 'admin' | 'user'): Promise<void> {
     const users = await this.usersRepository.find({ where: { tenantId } });
     const targetUser = users.find(u => u.id === userId);
-    
+
     if (!targetUser) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
@@ -169,7 +169,7 @@ export class TenantsService {
 
     const users = await this.usersRepository.find({ where: { tenantId } });
     const targetUser = users.find(u => u.id === userId);
-    
+
     if (!targetUser) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
@@ -225,7 +225,7 @@ export class TenantsService {
 
     // Generate invitation URL using the token
     const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/join?token=${invitationToken}`;
-    
+
     return {
       ...savedInvitation,
       invitationUrl,
