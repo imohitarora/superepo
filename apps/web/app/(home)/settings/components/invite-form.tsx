@@ -11,13 +11,7 @@ import {
 } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"
+import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group"
 import { toast } from "@workspace/ui/hooks/use-toast"
 import { settingsApi } from "../api/settings"
 import { InviteUserData } from "@/services/api-service"
@@ -75,19 +69,21 @@ export function InviteForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
+            <Label>Role</Label>
+            <RadioGroup
               value={role}
               onValueChange={(value: "admin" | "user") => setRole(value)}
+              className="grid grid-cols-2 gap-4"
             >
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="user" id="user" />
+                <Label htmlFor="user">User</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="admin" id="admin" />
+                <Label htmlFor="admin">Admin</Label>
+              </div>
+            </RadioGroup>
             <p className="text-sm text-muted-foreground">
               Admins can manage team members and settings.
             </p>
