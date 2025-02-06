@@ -1,19 +1,41 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { Tenant } from '../tenants/tenant.entity';
 
-@Entity()
+@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @ApiProperty({ example: '1', description: 'Unique identifier' })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
+  @ApiProperty({ example: 'user@example.com', description: 'User email' })
   @Column({ unique: true })
   email: string;
 
   @Column()
   password: string;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @ApiProperty({ example: ['admin'], description: 'User roles' })
+  @Column({ type: 'json', nullable: true })
+  roles: string[];
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'tenant_id', nullable: true })
+  tenantId: string;
+
+  @ManyToOne(() => Tenant, tenant => tenant.users)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant: Tenant;
+
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+    if (!this.roles) {
+      this.roles = ['user'];
+    }
+  }
 }

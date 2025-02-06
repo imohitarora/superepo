@@ -1,16 +1,16 @@
-import { Controller, Post, Body, UseGuards, Get, Request, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, HttpException, HttpStatus, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RegisterResponse, LoginResponse, ProfileResponse } from './dto/auth.response';
 import { 
   ApiTags, 
   ApiOperation, 
   ApiResponse, 
   ApiBearerAuth,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 
 @ApiTags('Authentication')
@@ -21,44 +21,38 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ type: RegisterDto })
+  @ApiQuery({ name: 'invitationToken', required: false, description: 'Invitation token for joining existing tenant' })
   @ApiResponse({
     status: 201,
     description: 'User successfully registered',
-    type: RegisterResponse,
-  })
-  @ApiResponse({ 
-    status: 409, 
-    description: 'Email already exists',
     schema: {
       example: {
-        status: 409,
-        message: 'Email already exists',
-      },
-    },
-  })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Invalid input',
-    schema: {
-      example: {
-        status: 400,
-        message: 'Validation failed',
-        errors: [
-          'email must be a valid email',
-          'password must be at least 6 characters long',
-        ],
-      },
-    },
-  })
-  async register(@Body() registerDto: RegisterDto): Promise<RegisterResponse> {
-    try {
-      const user = await this.authService.register(registerDto.email, registerDto.password);
-      return {
         message: 'Registration successful',
         user: {
-          id: user.id,
-          email: user.email,
+          id: 1,
+          email: 'user@example.com',
+          tenantId: 'uuid',
+          roles: ['user'],
         },
+        access_token: 'jwt_token',
+      },
+    },
+  })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Query('invitationToken') invitationToken?: string,
+  ) {
+    try {
+      const result = await this.authService.register(
+        registerDto.email,
+        registerDto.password,
+        invitationToken
+      );
+      return {
+        ...result,
+        message: 'Registration successful'
       };
     } catch (error) {
       if (error.message === 'Email already exists') {
@@ -81,28 +75,26 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'User successfully logged in',
-    type: LoginResponse,
-  })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Invalid credentials',
     schema: {
       example: {
-        status: 401,
-        message: 'Invalid credentials',
+        message: 'Login successful',
+        user: {
+          id: 1,
+          email: 'user@example.com',
+          tenantId: 'uuid',
+          roles: ['user'],
+        },
+        access_token: 'jwt_token',
       },
     },
   })
-  async login(@Request() req): Promise<LoginResponse> {
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(@Request() req) {
     try {
       const result = await this.authService.login(req.user);
       return {
-        message: 'Login successful',
-        user: {
-          id: req.user.id,
-          email: req.user.email,
-        },
-        access_token: result.access_token,
+        ...result,
+        message: 'Login successful'
       };
     } catch (error) {
       throw new HttpException({
@@ -119,23 +111,25 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'User profile retrieved successfully',
-    type: ProfileResponse,
-  })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Unauthorized',
     schema: {
       example: {
-        status: 401,
-        message: 'Unauthorized',
+        user: {
+          id: 1,
+          email: 'user@example.com',
+          tenantId: 'uuid',
+          roles: ['user'],
+        },
       },
     },
   })
-  getProfile(@Request() req): ProfileResponse {
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  getProfile(@Request() req) {
     return {
       user: {
         id: req.user.userId,
         email: req.user.email,
+        tenantId: req.user.tenantId,
+        roles: req.user.roles,
       },
     };
   }
