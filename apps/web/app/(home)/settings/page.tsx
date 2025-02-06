@@ -1,137 +1,65 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
+import { ProfileForm } from "./components/profile-form"
+import { PasswordForm } from "./components/password-form"
+import { InviteForm } from "./components/invite-form"
+import { TeamList } from "./components/team-list"
 
-import { Button } from "@workspace/ui/components/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form"
-import { Input } from "@workspace/ui/components/input"
-import { Textarea } from "@workspace/ui/components/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
-import { toast } from "@workspace/ui/hooks/use-toast"
-
-const profileFormSchema = z.object({
-  username: z
-    .string()
-    .min(2, {
-      message: "Username must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Username must not be longer than 30 characters.",
-    }),
-  email: z
-    .string({
-      required_error: "Please select an email to display.",
-    })
-    .email(),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: "Please enter a valid URL." }),
-      }),
-    )
-    .optional(),
-})
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>
-
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: "I own a computer.",
-  urls: [{ value: "https://shadcn.com" }, { value: "http://twitter.com/shadcn" }],
-}
-
-export default function SettingsProfilePage() {
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues,
-    mode: "onChange",
-  })
-
-  function onSubmit(data: ProfileFormValues) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
-  }
-
+export default function SettingsPage() {
   return (
-    <>
-      <div className="flex items-center justify-between space-y-2">
+    <div className="space-y-6">
+      <div>
         <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+        <p className="text-sm text-muted-foreground mt-2">
+          Manage your account settings and preferences.
+        </p>
       </div>
-      <div className="max-w-2xl">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="shadcn" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    This is your public display name. It can be your real name or a pseudonym. You can only change this
-                    once every 30 days.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a verified email to display" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="m@example.com">m@example.com</SelectItem>
-                      <SelectItem value="m@google.com">m@google.com</SelectItem>
-                      <SelectItem value="m@support.com">m@support.com</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    You can manage verified email addresses in your <a href="/examples/forms">email settings</a>.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="bio"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bio</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Tell us a little bit about yourself" className="resize-none" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    You can <span>@mention</span> other users and organizations to link to them.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit">Update profile</Button>
-          </form>
-        </Form>
-      </div>
-    </>
+
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="team">Team Members</TabsTrigger>
+          <TabsTrigger value="invite">Invite</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile" className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium">Profile</h3>
+            <p className="text-sm text-muted-foreground">
+              Manage your profile settings and preferences.
+            </p>
+          </div>
+          <ProfileForm />
+        </TabsContent>
+        <TabsContent value="security" className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium">Security</h3>
+            <p className="text-sm text-muted-foreground">
+              Update your password and secure your account.
+            </p>
+          </div>
+          <PasswordForm />
+        </TabsContent>
+        <TabsContent value="team" className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium">Team Members</h3>
+            <p className="text-sm text-muted-foreground">
+              View and manage your team members.
+            </p>
+          </div>
+          <TeamList />
+        </TabsContent>
+        <TabsContent value="invite" className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium">Invite Team Members</h3>
+            <p className="text-sm text-muted-foreground">
+              Invite new team members and manage roles.
+            </p>
+          </div>
+          <InviteForm />
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }
-
