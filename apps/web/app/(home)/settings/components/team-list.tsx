@@ -23,6 +23,7 @@ import { MoreHorizontal, Clock } from "lucide-react"
 import { toast } from "@workspace/ui/hooks/use-toast"
 import { settingsApi, User } from "../api/settings"
 import { formatDistanceToNow } from "date-fns"
+import { APIError } from "@/services/api-service"
 
 interface PendingInvitation {
   id: string
@@ -48,6 +49,7 @@ export function TeamList() {
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [actionInProgress, setActionInProgress] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const loadData = async () => {
     try {
@@ -85,11 +87,12 @@ export function TeamList() {
       setTeamMembers(membersList);
     } catch (error) {
       console.error('Error loading team data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load team members. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof APIError) {
+        setError(error.message);
+      } else {
+        setError('Failed to load team members. Please try again later.');
+      }
+      setTeamMembers([]);
     } finally {
       setLoading(false);
     }
@@ -148,7 +151,7 @@ export function TeamList() {
       console.error('Error performing action:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Action failed.",
+        description: error instanceof APIError ? error.message : "Action failed. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -157,7 +160,32 @@ export function TeamList() {
   };
 
   if (loading) {
-    return <div>Loading team members...</div>
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-sm">Loading team members...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-8">
+        <div className="flex flex-col items-center justify-center text-center space-y-2">
+          <div className="text-sm font-medium text-destructive">{error}</div>
+          <p className="text-sm text-muted-foreground">
+            Contact your team administrator if you need access to this feature.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (teamMembers.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-sm text-muted-foreground">No team members found.</div>
+      </div>
+    );
   }
 
   const isAdmin = currentUser?.roles.includes("admin")
@@ -268,11 +296,6 @@ export function TeamList() {
                 </div>
               </div>
             ))}
-            {teamMembers.length === 0 && (
-              <div className="text-center py-4 text-sm text-muted-foreground">
-                No team members found.
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>

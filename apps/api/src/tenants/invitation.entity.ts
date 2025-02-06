@@ -42,6 +42,16 @@ export class Invitation {
   @Column({ default: 'user' })
   role: 'admin' | 'user';
 
+  @Column({ type: 'timestamp', nullable: true })
+  acceptedAt: Date;
+
+  @Column({ type: 'uuid', nullable: true })
+  acceptedBy: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'acceptedBy' })
+  acceptedUser: User;
+
   @CreateDateColumn()
   createdAt: Date;
 

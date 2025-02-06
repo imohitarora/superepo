@@ -85,23 +85,38 @@ export class TenantsService {
 
   async acceptInvitation(token: string, userId: string): Promise<void> {
     const invitation = await this.invitationsRepository.findOne({
-      where: { token, status: 'pending' }
+      where: { token },
     });
 
-    if (!invitation || invitation.expiresAt < new Date()) {
-      throw new UnauthorizedException('Invalid or expired invitation');
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found');
     }
 
-    // Update user with tenant ID
-    await this.usersRepository.update(userId, {
-      tenantId: invitation.tenantId,
-      roles: [invitation.role]
+    if (invitation.status !== 'pending') {
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Invitation has already been used or expired',
+      }, HttpStatus.BAD_REQUEST);
+    }
+
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
     });
 
-    // Update invitation status
-    await this.invitationsRepository.update(invitation.id, {
-      status: 'accepted'
-    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update user's tenant and role
+    user.tenantId = invitation.tenantId;
+    user.roles = [invitation.role || 'user'];
+    await this.usersRepository.save(user);
+
+    // Mark invitation as completed
+    invitation.status = 'completed';
+    invitation.acceptedAt = new Date();
+    invitation.acceptedBy = userId;
+    await this.invitationsRepository.save(invitation);
   }
 
   async getTenantUsers(tenantId: string): Promise<User[]> {
