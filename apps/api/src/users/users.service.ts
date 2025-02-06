@@ -61,4 +61,9 @@ export class UsersService {
     await this.usersRepository.update(userId, { roles });
     return this.findOne(userId);
   }
+
+  async update(user: User): Promise<User> {
+    await this.usersRepository.save(user);
+    return this.findOne(user.id);
+  }
 }

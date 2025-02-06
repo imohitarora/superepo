@@ -1,52 +1,66 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-
+import { useEffect, useState } from "react"
 import { Button } from "@workspace/ui/components/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
+import { Label } from "@workspace/ui/components/label"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { toast } from "@workspace/ui/hooks/use-toast"
-
-const profileFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  username: z
-    .string()
-    .min(2, {
-      message: "Username must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Username must not be longer than 30 characters.",
-    }),
-  bio: z.string().max(160).min(4),
-})
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>
-
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: "I own a computer.",
-  name: "",
-  username: "",
-}
+import { settingsApi, User } from "../api/settings"
+import { Alert, AlertDescription } from "@workspace/ui/components/alert"
+import { InfoIcon } from "lucide-react"
 
 export function ProfileForm() {
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues,
-    mode: "onChange",
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [form, setForm] = useState({
+    name: "",
+    bio: "",
   })
 
-  async function onSubmit(data: ProfileFormValues) {
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const data = await settingsApi.getProfile()
+        setUser(data)
+        setForm({
+          name: data.name || "",
+          bio: data.bio || "",
+        })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load profile. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
     try {
-      // TODO: Implement API call to update profile
-      // await updateProfile(data)
+      const updatedUser = await settingsApi.updateProfile({
+        name: form.name || undefined,
+        bio: form.bio || undefined,
+      })
+      setUser(updatedUser)
       toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+        title: "Success",
+        description: "Profile updated successfully.",
       })
     } catch (error) {
       toast({
@@ -54,69 +68,74 @@ export function ProfileForm() {
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      setSaving(false)
     }
   }
 
+  if (loading) {
+    return <div>Loading profile...</div>
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormDescription>
-                Your full name as you'd like it to appear.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Card>
+      <CardHeader>
+        <CardTitle>Profile</CardTitle>
+        <CardDescription>
+          View and manage your profile settings.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Alert>
+          <InfoIcon className="h-4 w-4" />
+          <AlertDescription>
+            Profile customization is coming soon! You'll be able to update your name, bio, and other details.
+          </AlertDescription>
+        </Alert>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={user?.email || ""}
+              disabled
+            />
+            <p className="text-sm text-muted-foreground">
+              Your email address is used for login and notifications.
+            </p>
+          </div>
 
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="johndoe" {...field} />
-              </FormControl>
-              <FormDescription>
-                This is your public display name. You can only change this once every 30 days.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <div className="space-y-2">
+            <Label>Name</Label>
+            <Input
+              type="text"
+              placeholder="Enter your name"
+              value={form.name}
+              onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+            />
+            <p className="text-sm text-muted-foreground">
+              Your name as you'd like others to see it.
+            </p>
+          </div>
 
-        <FormField
-          control={form.control}
-          name="bio"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Tell us a little bit about yourself"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                You can @mention other users and organizations.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <div className="space-y-2">
+            <Label>Bio</Label>
+            <Textarea
+              placeholder="Tell us about yourself"
+              value={form.bio}
+              onChange={(e) => setForm(prev => ({ ...prev, bio: e.target.value }))}
+              className="h-32"
+            />
+            <p className="text-sm text-muted-foreground">
+              A brief description about yourself that others will see.
+            </p>
+          </div>
 
-        <Button type="submit">Update profile</Button>
-      </form>
-    </Form>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

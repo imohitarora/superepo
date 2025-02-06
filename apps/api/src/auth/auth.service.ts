@@ -83,4 +83,23 @@ export class AuthService {
       user: result
     };
   }
+
+  async updateProfile(userId: string, updateData: { name?: string; bio?: string; avatarUrl?: string }) {
+    console.log('Updating profile for user:', userId);
+    const user = await this.usersService.findOne(userId);
+    
+    // Update only provided fields
+    if (updateData.name !== undefined) user.name = updateData.name;
+    if (updateData.bio !== undefined) user.bio = updateData.bio;
+    if (updateData.avatarUrl !== undefined) user.avatarUrl = updateData.avatarUrl;
+    
+    const updatedUser = await this.usersService.update(user);
+    console.log('Profile updated successfully:', updatedUser);
+    
+    const { password: _, ...result } = updatedUser;
+    return {
+      message: 'Profile updated successfully',
+      user: result
+    };
+  }
 }

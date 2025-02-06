@@ -7,7 +7,7 @@ export async function apiCall<T>(endpoint: string, method: string = 'GET', body?
         throw new Error('Unauthorized: User not logged in');
     }
 
-    const res = await fetch(`${process.env.API_SERVER}${endpoint}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_SERVER}${endpoint}`, {
         method,
         headers: {
             'Content-Type': 'application/json',

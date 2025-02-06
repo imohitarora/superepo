@@ -1,6 +1,7 @@
 "use client"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
+import { useEffect, useState } from "react"
+import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -19,56 +20,82 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
 import { MoreHorizontal } from "lucide-react"
-
-// This would come from your API
-type TeamMember = {
-  id: string
-  name: string
-  email: string
-  role: "admin" | "user"
-  avatarUrl?: string
-  status: "active" | "invited"
-}
-
-const dummyTeamMembers: TeamMember[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    role: "admin",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    role: "user",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Bob Wilson",
-    email: "bob@example.com",
-    role: "user",
-    status: "invited",
-  },
-]
+import { toast } from "@workspace/ui/hooks/use-toast"
+import { settingsApi, User } from "../api/settings"
 
 export function TeamList() {
+  const [teamMembers, setTeamMembers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+
+  const loadTeamMembers = async () => {
+    try {
+      const users = await settingsApi.getTeamMembers()
+      setTeamMembers(users)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load team members. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadCurrentUser = async () => {
+    try {
+      const user = await settingsApi.getProfile()
+      setCurrentUser(user)
+    } catch (error) {
+      console.error("Failed to load current user:", error)
+    }
+  }
+
+  useEffect(() => {
+    loadCurrentUser()
+    loadTeamMembers()
+  }, [])
+
   const handleRemoveMember = async (memberId: string) => {
-    // TODO: Implement remove member functionality
-    console.log("Remove member:", memberId)
+    try {
+      await settingsApi.removeTeamMember(memberId)
+      toast({
+        title: "Success",
+        description: "Team member removed successfully.",
+      })
+      loadTeamMembers() // Reload the list
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to remove team member.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleChangeRole = async (memberId: string, newRole: "admin" | "user") => {
-    // TODO: Implement role change functionality
-    console.log("Change role:", memberId, newRole)
+    try {
+      await settingsApi.changeUserRole(memberId, newRole)
+      toast({
+        title: "Success",
+        description: "User role updated successfully.",
+      })
+      loadTeamMembers() // Reload the list
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update user role.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleResendInvite = async (memberId: string) => {
-    // TODO: Implement resend invite functionality
-    console.log("Resend invite:", memberId)
+  if (loading) {
+    return <div>Loading team members...</div>
   }
+
+  const isAdmin = currentUser?.roles.includes("admin")
 
   return (
     <div className="space-y-4">
@@ -81,74 +108,65 @@ export function TeamList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {dummyTeamMembers.map((member) => (
+            {teamMembers.map((member) => (
               <div
                 key={member.id}
                 className="flex items-center justify-between space-x-4 rounded-lg border p-4"
               >
                 <div className="flex items-center space-x-4">
                   <Avatar>
-                    <AvatarImage src={member.avatarUrl} />
                     <AvatarFallback>
-                      {member.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
+                      {member.name || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium leading-none">
-                      {member.name}
+                      {member.email}
+                      {currentUser?.id === member.id && " (You)"}
                     </p>
-                    <p className="text-sm text-muted-foreground">{member.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Joined {new Date(member.createdAt || "").toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Badge variant={member.role === "admin" ? "default" : "secondary"}>
-                    {member.role}
+                  <Badge variant={member.roles.includes("admin") ? "default" : "secondary"}>
+                    {member.roles.includes("admin") ? "Admin" : "User"}
                   </Badge>
-                  {member.status === "invited" && (
-                    <Badge variant="outline">Pending</Badge>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {member.role === "user" ? (
+                  {/* Hide management options until API endpoints are implemented */}
+                  {/* {isAdmin && currentUser?.id !== member.id && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {!member.roles.includes("admin") ? (
+                          <DropdownMenuItem
+                            onClick={() => handleChangeRole(member.id, "admin")}
+                          >
+                            Make admin
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => handleChangeRole(member.id, "user")}
+                          >
+                            Remove admin
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
-                          onClick={() => handleChangeRole(member.id, "admin")}
+                          className="text-red-600"
+                          onClick={() => handleRemoveMember(member.id)}
                         >
-                          Make admin
+                          Remove member
                         </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          onClick={() => handleChangeRole(member.id, "user")}
-                        >
-                          Remove admin
-                        </DropdownMenuItem>
-                      )}
-                      {member.status === "invited" && (
-                        <DropdownMenuItem
-                          onClick={() => handleResendInvite(member.id)}
-                        >
-                          Resend invite
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => handleRemoveMember(member.id)}
-                      >
-                        Remove member
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )} */}
                 </div>
               </div>
             ))}

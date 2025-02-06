@@ -15,6 +15,18 @@ export class User {
   @Column()
   password: string;
 
+  @ApiProperty({ example: 'John Doe', description: 'User display name' })
+  @Column({ nullable: true })
+  name: string;
+
+  @ApiProperty({ example: 'Software engineer passionate about...', description: 'User bio' })
+  @Column({ type: 'text', nullable: true })
+  bio: string;
+
+  @ApiProperty({ example: 'https://example.com/avatar.jpg', description: 'User avatar URL' })
+  @Column({ name: 'avatar_url', nullable: true })
+  avatarUrl: string;
+
   @ApiProperty({ example: ['admin'], description: 'User roles' })
   @Column({ type: 'json', nullable: true })
   roles: string[];

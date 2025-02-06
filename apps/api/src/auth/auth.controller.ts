@@ -1,9 +1,10 @@
-import { Controller, Post, Body, UseGuards, Get, Request, HttpException, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, HttpException, HttpStatus, Query, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -116,6 +117,9 @@ export class AuthController {
         user: {
           id: 1,
           email: 'user@example.com',
+          name: 'John Doe',
+          bio: 'Software engineer',
+          avatarUrl: 'https://example.com/avatar.jpg',
           tenantId: 'uuid',
           roles: ['user'],
         },
@@ -128,9 +132,47 @@ export class AuthController {
       user: {
         id: req.user.userId,
         email: req.user.email,
+        name: req.user.name,
+        bio: req.user.bio,
+        avatarUrl: req.user.avatarUrl,
         tenantId: req.user.tenantId,
         roles: req.user.roles,
       },
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiBody({ type: UpdateProfileDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    schema: {
+      example: {
+        message: 'Profile updated successfully',
+        user: {
+          id: 1,
+          email: 'user@example.com',
+          name: 'John Doe',
+          bio: 'Software engineer',
+          avatarUrl: 'https://example.com/avatar.jpg',
+          tenantId: 'uuid',
+          roles: ['user'],
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    try {
+      return await this.authService.updateProfile(req.user.userId, updateProfileDto);
+    } catch (error) {
+      throw new HttpException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to update profile',
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

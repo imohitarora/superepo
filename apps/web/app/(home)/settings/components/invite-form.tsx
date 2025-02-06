@@ -1,96 +1,71 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-
+import { useState } from "react"
 import { Button } from "@workspace/ui/components/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
+import { Label } from "@workspace/ui/components/label"
 import { toast } from "@workspace/ui/hooks/use-toast"
-
-const inviteFormSchema = z.object({
-  inviteEmail: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  role: z.enum(["admin", "user"]),
-})
-
-type InviteFormValues = z.infer<typeof inviteFormSchema>
-
-const defaultValues: Partial<InviteFormValues> = {
-  inviteEmail: "",
-  role: "user",
-}
+import { settingsApi } from "../api/settings"
 
 export function InviteForm() {
-  const form = useForm<InviteFormValues>({
-    resolver: zodResolver(inviteFormSchema),
-    defaultValues,
-    mode: "onChange",
-  })
+  const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  async function onSubmit(data: InviteFormValues) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
     try {
-      // TODO: Implement API call to send invite
-      // await sendInvite(data)
+      const response = await settingsApi.inviteUser({ email })
       toast({
-        title: "Invite sent",
-        description: "The invitation has been sent successfully.",
+        title: "Success",
+        description: response.message || "Invitation sent successfully.",
       })
-      form.reset()
+      setEmail("")
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to send invite. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to send invitation.",
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Invite User</h3>
-          <FormField
-            control={form.control}
-            name="inviteEmail"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="user@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Role</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <Button type="submit">Send invite</Button>
-      </form>
-    </Form>
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Invite Team Member</CardTitle>
+          <CardDescription>
+            Send an invitation to add a new member to your team.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email address</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Sending..." : "Send Invitation"}
+          </Button>
+        </CardContent>
+      </Card>
+    </form>
   )
 }
