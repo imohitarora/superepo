@@ -26,16 +26,19 @@ export function ProfileForm() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
+        console.log("Loading profile...")
         const data = await settingsApi.getProfile()
+        console.log("Profile data received:", data)
         setUser(data)
         setForm({
           name: data.name || "",
           bio: data.bio || "",
         })
       } catch (error) {
+        console.error("Error loading profile:", error)
         toast({
           title: "Error",
-          description: "Failed to load profile. Please try again.",
+          description: error instanceof Error ? error.message : "Failed to load profile.",
           variant: "destructive",
         })
       } finally {
@@ -50,19 +53,22 @@ export function ProfileForm() {
     e.preventDefault()
     setSaving(true)
     try {
+      console.log("Updating profile with:", form)
       const updatedUser = await settingsApi.updateProfile({
-        name: form.name || undefined,
-        bio: form.bio || undefined,
+        name: form.name,
+        bio: form.bio,
       })
+      console.log("Profile updated:", updatedUser)
       setUser(updatedUser)
       toast({
         title: "Success",
         description: "Profile updated successfully.",
       })
     } catch (error) {
+      console.error("Error updating profile:", error)
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update profile.",
         variant: "destructive",
       })
     } finally {

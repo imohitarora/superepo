@@ -38,7 +38,9 @@ export class AuthService {
       email: user.email,
       sub: user.id,
       tenantId: user.tenantId,
-      roles: user.roles
+      roles: user.roles,
+      name: user.name,
+      bio: user.bio,
     };
     return {
       message: 'Login successful',
@@ -46,7 +48,9 @@ export class AuthService {
         id: user.id,
         email: user.email,
         tenantId: user.tenantId,
-        roles: user.roles
+        roles: user.roles,
+        name: user.name,
+        bio: user.bio,
       },
       access_token: this.jwtService.sign(payload),
     };

@@ -6,7 +6,6 @@ import { PasswordForm } from "./components/password-form"
 import { InviteForm } from "./components/invite-form"
 import { TeamList } from "./components/team-list"
 import { Separator } from "@workspace/ui/components/separator"
-import { PendingInvitations } from "./components/pending-invitations"
 
 export default function SettingsPage() {
   return (
@@ -61,11 +60,7 @@ export default function SettingsPage() {
               </p>
             </div>
             <Separator />
-            <InviteForm />
-            <div className="mt-6">
-              <h4 className="text-sm font-medium mb-4">Pending Invitations</h4>
-              <PendingInvitations />
-            </div>
+            <InviteForm />            
           </div>
         </TabsContent>
       </Tabs>

@@ -115,6 +115,7 @@ export class AuthController {
     description: 'User profile retrieved successfully',
     schema: {
       example: {
+        message: 'Profile retrieved successfully',
         user: {
           id: 1,
           email: 'user@example.com',
@@ -129,16 +130,20 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProfile(@Request() req) {
+    console.log('Getting profile for user:', req.user);
+    const user = {
+      id: req.user.userId,
+      email: req.user.email,
+      name: req.user.name,
+      bio: req.user.bio,
+      avatarUrl: req.user.avatarUrl,
+      tenantId: req.user.tenantId,
+      roles: req.user.roles,
+    };
+    console.log('Returning user profile:', user);
     return {
-      user: {
-        id: req.user.userId,
-        email: req.user.email,
-        name: req.user.name,
-        bio: req.user.bio,
-        avatarUrl: req.user.avatarUrl,
-        tenantId: req.user.tenantId,
-        roles: req.user.roles,
-      },
+      message: 'Profile retrieved successfully',
+      user,
     };
   }
 
@@ -168,8 +173,15 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
     try {
-      return await this.authService.updateProfile(req.user.userId, updateProfileDto);
+      console.log('Updating profile for user:', req.user.userId, 'with data:', updateProfileDto);
+      const result = await this.authService.updateProfile(req.user.userId, updateProfileDto);
+      console.log('Profile update result:', result);
+      return {
+        message: 'Profile updated successfully',
+        user: result,
+      };
     } catch (error) {
+      console.error('Error updating profile:', error);
       throw new HttpException({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Failed to update profile',

@@ -19,27 +19,79 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal, Clock } from "lucide-react"
 import { toast } from "@workspace/ui/hooks/use-toast"
 import { settingsApi, User } from "../api/settings"
+import { formatDistanceToNow } from "date-fns"
+
+interface PendingInvitation {
+  id: string
+  email: string
+  role: string
+  createdAt: string
+  expiresAt: string
+}
+
+interface TeamMember {
+  type: 'user' | 'invitation'
+  id: string
+  email: string
+  role: string
+  name?: string
+  createdAt: string
+  status?: 'active' | 'pending'
+  expiresAt?: string
+}
 
 export function TeamList() {
-  const [teamMembers, setTeamMembers] = useState<User[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null)
 
-  const loadTeamMembers = async () => {
+  const loadData = async () => {
     try {
-      const users = await settingsApi.getTeamMembers()
-      setTeamMembers(users)
+      console.log('Fetching team data...');
+      const [usersResponse, invitations] = await Promise.all([
+        settingsApi.getTeamMembers(),
+        settingsApi.getPendingInvitations(),
+      ]);
+
+      console.log('API Responses:', { usersResponse, invitations });
+
+      // Convert users and invitations to TeamMember format
+      const membersList: TeamMember[] = [
+        ...(usersResponse?.users || []).map((user): TeamMember => ({
+          type: 'user',
+          id: user.id,
+          email: user.email,
+          role: user.roles.includes('admin') ? 'admin' : 'user',
+          name: user.name,
+          createdAt: user.createdAt || new Date().toISOString(),
+          status: 'active',
+        })),
+        ...(invitations || []).map((inv): TeamMember => ({
+          type: 'invitation',
+          id: inv.id,
+          email: inv.email,
+          role: inv.role || 'user',
+          createdAt: inv.createdAt,
+          status: 'pending',
+          expiresAt: inv.expiresAt,
+        })),
+      ];
+
+      console.log('Processed team members:', membersList);
+      setTeamMembers(membersList);
     } catch (error) {
+      console.error('Error loading team data:', error);
       toast({
         title: "Error",
         description: "Failed to load team members. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -54,40 +106,44 @@ export function TeamList() {
 
   useEffect(() => {
     loadCurrentUser()
-    loadTeamMembers()
+    loadData()
   }, [])
 
-  const handleRemoveMember = async (memberId: string) => {
+  const handleAction = async (action: string, memberId: string, data?: any) => {
+    setActionInProgress(memberId)
     try {
-      await settingsApi.removeTeamMember(memberId)
-      toast({
-        title: "Success",
-        description: "Team member removed successfully.",
-      })
-      loadTeamMembers() // Reload the list
+      switch (action) {
+        case 'remove':
+          await settingsApi.removeTeamMember(memberId)
+          toast({
+            title: "Success",
+            description: "Team member removed successfully.",
+          })
+          break
+        case 'changeRole':
+          await settingsApi.changeUserRole(memberId, data)
+          toast({
+            title: "Success",
+            description: "User role updated successfully.",
+          })
+          break
+        case 'resend':
+          await settingsApi.resendInvitation(memberId)
+          toast({
+            title: "Success",
+            description: "Invitation resent successfully.",
+          })
+          break
+      }
+      await loadData() // Reload the list
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to remove team member.",
+        description: error instanceof Error ? error.message : "Action failed.",
         variant: "destructive",
       })
-    }
-  }
-
-  const handleChangeRole = async (memberId: string, newRole: "admin" | "user") => {
-    try {
-      await settingsApi.changeUserRole(memberId, newRole)
-      toast({
-        title: "Success",
-        description: "User role updated successfully.",
-      })
-      loadTeamMembers() // Reload the list
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update user role.",
-        variant: "destructive",
-      })
+    } finally {
+      setActionInProgress(null)
     }
   }
 
@@ -116,22 +172,33 @@ export function TeamList() {
                 <div className="flex items-center space-x-4">
                   <Avatar>
                     <AvatarFallback>
-                      {member.name || '?'}
+                      {member.name?.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium leading-none">
-                      {member.email}
-                      {currentUser?.id === member.id && " (You)"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium leading-none">
+                        {member.email}
+                        {currentUser?.id === member.id && " (You)"}
+                      </p>
+                      {member.status === 'pending' && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Pending
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      Joined {new Date(member.createdAt || "").toLocaleDateString()}
+                      {member.status === 'pending'
+                        ? `Invited ${formatDistanceToNow(new Date(member.createdAt))} ago`
+                        : `Joined ${formatDistanceToNow(new Date(member.createdAt))} ago`
+                      }
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Badge variant={member.roles.includes("admin") ? "default" : "secondary"}>
-                    {member.roles.includes("admin") ? "Admin" : "User"}
+                  <Badge variant={member.role === 'admin' ? "default" : "secondary"}>
+                    {member.role}
                   </Badge>
                   {isAdmin && currentUser?.id !== member.id && (
                     <DropdownMenu>
@@ -144,25 +211,48 @@ export function TeamList() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        {!member.roles.includes("admin") ? (
-                          <DropdownMenuItem
-                            onClick={() => handleChangeRole(member.id, "admin")}
-                          >
-                            Make admin
-                          </DropdownMenuItem>
+                        {member.type === 'user' ? (
+                          <>
+                            {member.role !== 'admin' ? (
+                              <DropdownMenuItem
+                                onClick={() => handleAction('changeRole', member.id, 'admin')}
+                                disabled={actionInProgress === member.id}
+                              >
+                                Make admin
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleAction('changeRole', member.id, 'user')}
+                                disabled={actionInProgress === member.id}
+                              >
+                                Remove admin
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleAction('remove', member.id)}
+                              disabled={actionInProgress === member.id}
+                            >
+                              Remove member
+                            </DropdownMenuItem>
+                          </>
                         ) : (
-                          <DropdownMenuItem
-                            onClick={() => handleChangeRole(member.id, "user")}
-                          >
-                            Remove admin
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => handleAction('resend', member.id)}
+                              disabled={actionInProgress === member.id}
+                            >
+                              Resend invitation
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleAction('remove', member.id)}
+                              disabled={actionInProgress === member.id}
+                            >
+                              Cancel invitation
+                            </DropdownMenuItem>
+                          </>
                         )}
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleRemoveMember(member.id)}
-                        >
-                          Remove member
-                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}

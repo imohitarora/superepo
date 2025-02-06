@@ -39,25 +39,25 @@ export interface InviteResponse {
 const realSettingsApi = {
   // Profile
   getProfile: async () => {
-    const response = await apiCall<{ user: User }>("/auth/profile")
+    const response = await apiCall<{ message: string; user: User }>("/auth/profile")
     return response.user
   },
   
   updateProfile: async (data: UpdateProfileData) => {
-    const response = await apiCall<{ user: User }>("/auth/profile", "PATCH", data)
+    const response = await apiCall<{ message: string; user: User }>("/auth/profile", "PATCH", data)
     return response.user
   },
 
   // Password
   updatePassword: async (data: UpdatePasswordData) => {
-    await apiCall<{ message: string }>("/auth/password", "PATCH", data)
-    return null
+    const response = await apiCall<{ message: string }>("/auth/password", "PATCH", data)
+    return response.message
   },
 
   // Team Management
   getTeamMembers: async () => {
     const response = await apiCall<{ users: User[] }>("/tenants/users")
-    return response.users
+    return response
   },
   
   inviteUser: async (data: InviteUserData) => {
@@ -66,23 +66,23 @@ const realSettingsApi = {
   },
   
   validateInvitation: async (token: string) => {
-    await apiCall<void>(`/tenants/validate-invitation/${token}`)
-    return null
+    const response = await apiCall<{ message: string }>(`/tenants/validate-invitation/${token}`)
+    return response.message
   },
   
   acceptInvitation: async (token: string) => {
-    await apiCall<void>(`/tenants/accept-invitation/${token}`, "POST")
-    return null
+    const response = await apiCall<{ message: string }>(`/tenants/accept-invitation/${token}`, "POST")
+    return response.message
   },
 
   changeUserRole: async (userId: string, newRole: "admin" | "user") => {
-    await apiCall<{ message: string }>(`/tenants/users/${userId}/role`, "PATCH", { role: newRole })
-    return null
+    const response = await apiCall<{ message: string }>(`/tenants/users/${userId}/role`, "PATCH", { role: newRole })
+    return response.message
   },
 
   removeTeamMember: async (userId: string) => {
-    await apiCall<{ message: string }>(`/tenants/users/${userId}`, "DELETE")
-    return null
+    const response = await apiCall<{ message: string }>(`/tenants/users/${userId}`, "DELETE")
+    return response.message
   },
 
   getPendingInvitations: async () => {
@@ -92,7 +92,7 @@ const realSettingsApi = {
 
   resendInvitation: async (invitationId: string) => {
     const response = await apiCall<{ message: string }>(`/tenants/invitations/${invitationId}/resend`, "POST")
-    return response
+    return response.message
   },
 }
 
