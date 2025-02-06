@@ -110,42 +110,51 @@ export function TeamList() {
   }, [])
 
   const handleAction = async (action: string, memberId: string, data?: any) => {
-    setActionInProgress(memberId)
+    setActionInProgress(memberId);
     try {
       switch (action) {
         case 'remove':
-          await settingsApi.removeTeamMember(memberId)
-          toast({
-            title: "Success",
-            description: "Team member removed successfully.",
-          })
-          break
+          if (data?.type === 'invitation') {
+            await settingsApi.cancelInvitation(memberId);
+            toast({
+              title: "Success",
+              description: "Invitation cancelled successfully.",
+            });
+          } else {
+            await settingsApi.removeTeamMember(memberId);
+            toast({
+              title: "Success",
+              description: "Team member removed successfully.",
+            });
+          }
+          break;
         case 'changeRole':
-          await settingsApi.changeUserRole(memberId, data)
+          await settingsApi.changeUserRole(memberId, data);
           toast({
             title: "Success",
             description: "User role updated successfully.",
-          })
-          break
+          });
+          break;
         case 'resend':
-          await settingsApi.resendInvitation(memberId)
+          await settingsApi.resendInvitation(memberId);
           toast({
             title: "Success",
             description: "Invitation resent successfully.",
-          })
-          break
+          });
+          break;
       }
-      await loadData() // Reload the list
+      await loadData(); // Reload the list
     } catch (error) {
+      console.error('Error performing action:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Action failed.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setActionInProgress(null)
+      setActionInProgress(null);
     }
-  }
+  };
 
   if (loading) {
     return <div>Loading team members...</div>
@@ -246,7 +255,7 @@ export function TeamList() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-red-600"
-                              onClick={() => handleAction('remove', member.id)}
+                              onClick={() => handleAction('remove', member.id, member)}
                               disabled={actionInProgress === member.id}
                             >
                               Cancel invitation

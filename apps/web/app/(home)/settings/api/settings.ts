@@ -94,6 +94,11 @@ const realSettingsApi = {
     const response = await apiCall<{ message: string }>(`/tenants/invitations/${invitationId}/resend`, "POST")
     return response.message
   },
+
+  cancelInvitation: async (invitationId: string) => {
+    const response = await apiCall<{ message: string }>(`/tenants/invitations/${invitationId}`, "DELETE")
+    return response.message
+  },
 }
 
 export const settingsApi = realSettingsApi

@@ -141,6 +141,26 @@ export class TenantsController {
     return this.tenantsService.resendInvitation(invitationId, user.tenantId);
   }
 
+  @Delete('invitations/:id')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Cancel a pending invitation' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Invitation cancelled successfully',
+    schema: {
+      properties: {
+        message: { type: 'string' }
+      }
+    }
+  })
+  async cancelInvitation(
+    @Request() req,
+    @Param('id') invitationId: string,
+  ) {
+    await this.tenantsService.cancelInvitation(invitationId, req.user.tenantId);
+    return { message: 'Invitation cancelled successfully' };
+  }
+
   @Patch('users/:userId/role')
   @Roles('admin')
   @ApiOperation({ summary: 'Update user role' })

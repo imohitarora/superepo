@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
@@ -230,5 +230,21 @@ export class TenantsService {
       ...savedInvitation,
       invitationUrl,
     };
+  }
+
+  async cancelInvitation(invitationId: string, tenantId: string): Promise<void> {
+    const invitation = await this.invitationsRepository.findOne({
+      where: { id: invitationId }
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found');
+    }
+
+    if (invitation.tenantId !== tenantId) {
+      throw new ForbiddenException('You do not have permission to cancel this invitation');
+    }
+
+    await this.invitationsRepository.delete(invitationId);
   }
 }
