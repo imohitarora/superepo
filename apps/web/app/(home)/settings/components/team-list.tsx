@@ -172,7 +172,7 @@ export function TeamList() {
                 <div className="flex items-center space-x-4">
                   <Avatar>
                     <AvatarFallback>
-                      {member.name?.split(' ').map(n => n[0]).join('')}
+                      {member.name?.split(' ').map(n => n[0]).join('') || member.email?.split('@')[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div>
