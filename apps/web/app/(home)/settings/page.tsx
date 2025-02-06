@@ -37,14 +37,14 @@ export default function SettingsPage() {
   const pathname = usePathname()
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
+    <div className="grid gap-6 p-4 md:p-6 pt-0">
       {/* Profile Settings */}
       <div className="grid gap-6">
         <Card>
           <CardContent className="p-6">
             <form className="space-y-6">
               <div>
-                <h2 className="text-xl font-semibold">Profile Information</h2>
+                <h2 className="text-lg font-semibold">Profile Information</h2>
                 <p className="text-sm text-muted-foreground">
                   Update your personal information and email address
                 </p>
@@ -97,7 +97,7 @@ export default function SettingsPage() {
           <CardContent className="p-6">
             <form className="space-y-6">
               <div>
-                <h2 className="text-xl font-semibold">Notifications</h2>
+                <h2 className="text-lg font-semibold">Notifications</h2>
                 <p className="text-sm text-muted-foreground">
                   Configure how you receive notifications and alerts
                 </p>

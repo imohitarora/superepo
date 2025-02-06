@@ -8,12 +8,12 @@ import { Separator } from "@workspace/ui/components/separator"
 
 export default function PasswordPage() {
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
+    <div className="grid gap-6 p-4 md:p-6 pt-0">
       <Card>
         <CardContent className="p-6">
           <form className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold">Change Password</h2>
+              <h2 className="text-lg font-semibold">Change Password</h2>
               <p className="text-sm text-muted-foreground">
                 Update your password to keep your account secure
               </p>
@@ -59,7 +59,7 @@ export default function PasswordPage() {
         <CardContent className="p-6">
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold">Two-Factor Authentication</h2>
+              <h2 className="text-lg font-semibold">Two-Factor Authentication</h2>
               <p className="text-sm text-muted-foreground">
                 Add an extra layer of security to your account
               </p>

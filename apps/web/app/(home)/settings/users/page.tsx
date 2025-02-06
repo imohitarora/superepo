@@ -43,13 +43,13 @@ const users = [
 
 export default function UsersPage() {
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
+    <div className="grid gap-6 p-4 md:p-6 pt-0">
       <Card>
         <CardContent className="p-6">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold">Team Members</h2>
+                <h2 className="text-lg font-semibold">Team Members</h2>
                 <p className="text-sm text-muted-foreground">
                   Manage your team members and their roles
                 </p>
