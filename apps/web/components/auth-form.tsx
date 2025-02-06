@@ -13,7 +13,7 @@ import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface AuthFormProps {
   path: string
@@ -25,6 +25,8 @@ export function AuthForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div"> & AuthFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const invitationToken = searchParams.get('invitationToken')
   const isLogin = path === "login"
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -51,7 +53,11 @@ export function AuthForm({
     } else {
       // Handle Sign Up
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_SERVER}/auth/register`, {
+        const url = invitationToken
+          ? `${process.env.NEXT_PUBLIC_API_SERVER}/auth/register?invitationToken=${invitationToken}`
+          : `${process.env.NEXT_PUBLIC_API_SERVER}/auth/register`
+
+        const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -81,11 +87,13 @@ export function AuthForm({
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">
-            {isLogin ? "Welcome back" : "Create an account"}
+            {isLogin ? "Welcome back" : invitationToken ? "Accept invitation" : "Create an account"}
           </CardTitle>
           <CardDescription>
             {isLogin
               ? "Login with your Apple or Google account"
+              : invitationToken
+              ? "Create your account to join the tenant"
               : "Sign up with your Apple or Google account"}
           </CardDescription>
         </CardHeader>
@@ -152,27 +160,29 @@ export function AuthForm({
                   />
                 </div>
                 <Button type="submit" className="w-full">
-                  {isLogin ? "Login" : "Sign up"}
+                  {isLogin ? "Login" : invitationToken ? "Accept invitation" : "Sign up"}
                 </Button>
               </div>
               {error && <div className="text-red-500 text-center text-sm mb-4">{error}</div>}
-              <div className="text-center text-sm">
-                {isLogin ? (
-                  <>
-                    Don&apos;t have an account?{" "}
-                    <a href="register" className="underline underline-offset-4">
-                      Sign up
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    Already have an account?{" "}
-                    <a href="login" className="underline underline-offset-4">
-                      Login
-                    </a>
-                  </>
-                )}
-              </div>
+              {!invitationToken && (
+                <div className="text-center text-sm">
+                  {isLogin ? (
+                    <>
+                      Don&apos;t have an account?{" "}
+                      <a href="register" className="underline underline-offset-4">
+                        Sign up
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <a href="login" className="underline underline-offset-4">
+                        Login
+                      </a>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </form>
         </CardContent>
