@@ -23,8 +23,32 @@ import {
   SidebarRail,
 } from "@workspace/ui/components/sidebar"
 
+// Navigation data
+const navData = [
+  {
+    title: "Home",
+    url: "/",
+    icon: Home,
+    items: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+      },
+      {
+        title: "Transactions",
+        url: "/transactions",
+      },
+    ],
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings2,      
+  },
+]
+
 // This is sample data.
-const data = {
+export const data = {
   user: {
     name: "mohit",
     email: "m@example.com",
@@ -47,47 +71,7 @@ const data = {
       plan: "Free",
     },
   ],
-  navMain: [
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-      isActive: true,
-      items: [
-        {
-          title: "Dashboard",
-          url: "/dashboard",
-        },
-        {
-          title: "Transactions",
-          url: "/transactions",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      items: [
-        {
-          title: "Profile",
-          url: "#",
-        },
-        {
-          title: "Security",
-          url: "#",
-        },
-        {
-          title: "Team Members",
-          url: "#",
-        },
-        {
-          title: "Invite",
-          url: "#",
-        },
-      ],
-    },
-  ],
+  navMain: navData,
   projects: [
     {
       name: "Design Engineering",
@@ -114,8 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
+        <NavMain items={navData} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
