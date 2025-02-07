@@ -76,6 +76,8 @@ export class TenantsService {
     // Generate invitation URL using the token
     const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/register?invitationToken=${invitationToken}`;
 
+    console.log('Invitation URL:', invitationUrl);
+
     // Return the saved invitation with the URL
     return {
       ...savedInvitation,
