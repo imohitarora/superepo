@@ -24,7 +24,7 @@ import { PassportModule } from '@nestjs/passport';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         ssl: configService.get('DB_SSL') === 'true',
-        entities: [User, Tenant, Invitation],
+        autoLoadEntities: true,
         synchronize: configService.get('NODE_ENV') !== 'production',
         logging: configService.get('NODE_ENV') !== 'production',
       }),
@@ -38,4 +38,4 @@ import { PassportModule } from '@nestjs/passport';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
