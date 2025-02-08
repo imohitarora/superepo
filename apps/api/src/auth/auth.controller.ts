@@ -148,6 +148,25 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('validate')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Validate JWT token' })
+  @ApiResponse({ status: 200, description: 'Token is valid' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired token' })
+  async validateToken(@Request() req) {
+    console.log('Token validation request received:', {
+      userId: req.user.id,
+      email: req.user.email,
+      timestamp: new Date().toISOString()
+    });
+    
+    return {
+      valid: true,
+      user: req.user,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('profile')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update user profile' })
@@ -211,5 +230,12 @@ export class AuthController {
       updatePasswordDto.newPassword,
     );
     return { message: 'Password updated successfully' };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  async logout() {
+    return { message: 'Logout successful' };
   }
 }
