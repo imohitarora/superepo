@@ -5,6 +5,11 @@ Use database of your choice (MySQL, PostgreSQL, etc.) and configure it in the ap
 
 ## Usage
 
+You can use or follow the step 1 to clone.
+```bash
+pnpm dlx superepo@latest init
+```
+
 1. Clone the repository
 
 ```bash
@@ -101,3 +106,7 @@ import { Button } from "@workspace/ui/components/ui/button"
 - next-auth
 - passport
 - TypeORM
+
+## License
+
+Superepo is released under the [MIT License](https://opensource.org/licenses/MIT).
