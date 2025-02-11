@@ -9,11 +9,16 @@ Use database of your choice (MySQL, PostgreSQL, etc.) and configure it in the ap
 
 ```bash
 git clone https://github.com/mohitarora/superepo.git
+
+cd superepo
 ```
 
 2. Setup Environment Variables
-```
+
 Copy .env.example to .env in both apps/api and apps/web
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
 ```
 
 3. Install dependencies
@@ -22,15 +27,24 @@ Copy .env.example to .env in both apps/api and apps/web
 pnpm install
 ```
 
-4. Start the app
+4. Start the database (optional)
+
+example for Postgres:
+```bash
+docker pull postgres
+docker run -d --name <container_name> -p 5432:5432 -e POSTGRES_PASSWORD=<new_password> postgres
+```
+then update the .env file with the new password (default **DB_USERNAME**=postgres, **DB_DATABASE**=postgres) 
+
+5. Start the app
 
 ```bash
 pnpm dev
 ```
 
-5. Visit http://localhost:3000
+6. Visit http://localhost:3000
 
-6. Visit http://localhost:4000/api/docs
+7. Visit http://localhost:4000/api/docs
 
 If you need to install new packages, you can add to the respective app folder:
 
