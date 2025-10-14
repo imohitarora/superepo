@@ -1,22 +1,25 @@
 {
-  "name": "superepo",
-  "version": "0.0.1",
-  "private": false,
+  "name": "my-turborepo",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Mohit Arora",
+  "description": "A turborepo setup with Next.js, shadcn, NestJS, Prisma, and shared packages.",
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "prettier": "^3.2.5",
-    "turbo": "^2.3.0",
-    "typescript": "5.5.4"
+    "turbo": "^2.5.8"
   },
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "pnpm@10.18.3",
   "engines": {
-    "node": ">=20"
+    "node": ">=18"
   }
 }

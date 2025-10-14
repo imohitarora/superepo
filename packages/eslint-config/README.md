@@ -1,3 +1,3 @@
-# `@workspace/eslint-config`
+# `@turbo/eslint-config`
 
-Shared eslint configuration for the workspace.
+Collection of internal eslint configurations.

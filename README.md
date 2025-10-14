@@ -1,112 +1,119 @@
-# turborepo monorepo with Next.js 15 + NestJS 11 + shadcn
+# Turborepo starter
 
-This template is for creating a comprehensive Enterprise level app using Next.js 15 (frontend) and NestJS 11 (backend).
-Use database of your choice (MySQL, PostgreSQL, etc.) and configure it in the app.
+This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
 
-## Usage
+## Using this example
 
-You can use or follow the step 1 to clone.
-```bash
-pnpm dlx superepo@latest init
-```
-
-1. Clone the repository
+Run the following command:
 
 ```bash
-git clone https://github.com/mohitarora/superepo.git
-
-cd superepo
+npx create-turbo@latest -e with-nestjs
 ```
 
-2. Setup Environment Variables
+## What's inside?
 
-Copy .env.example to .env in both apps/api and apps/web
-```bash
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
-```
+This Turborepo includes the following packages/apps:
 
-3. Install dependencies
+### Apps and Packages
 
-```bash
-pnpm install
-```
+    .
+    ├── apps
+    │   ├── api                       # NestJS app (https://nestjs.com).
+    │   └── web                       # Next.js app (https://nextjs.org).
+    └── packages
+        ├── @repo/eslint-config       # `eslint` configurations (includes `prettier`)
+        ├── @repo/jest-config         # `jest` configurations
+        ├── @repo/typescript-config   # `tsconfig.json`s used throughout the monorepo
+        └── @repo/ui                  # Shareable stub React component library.
 
-4. Start the database (optional)
+Each package and application are 100% [TypeScript](https://www.typescriptlang.org/) safe.
 
-example for Postgres:
-```bash
-docker pull postgres
-docker run -d --name <container_name> -p 5432:5432 -e POSTGRES_PASSWORD=<new_password> postgres
-```
-then update the .env file with the new password (default **DB_USERNAME**=postgres, **DB_DATABASE**=postgres) 
+### Utilities
 
-5. Start the app
+This `Turborepo` has some additional tools already set for you:
 
-```bash
-pnpm dev
-```
+- [TypeScript](https://www.typescriptlang.org/) for static type-safety
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
+- [Jest](https://prettier.io) & [Playwright](https://playwright.dev/) for testing
 
-6. Visit http://localhost:3000
+### Commands
 
-7. Visit http://localhost:4000/api/docs
+This `Turborepo` already configured useful commands for all your apps and packages.
 
-If you need to install new packages, you can add to the respective app folder:
+#### Build
 
 ```bash
-pnpm add <package-name>
+# Will build all the app & packages with the supported `build` script.
+pnpm run build
+
+# ℹ️ If you plan to only build apps individually,
+# Please make sure you've built the packages first.
 ```
 
-## Adding shadcn components
-
-To add shadcn components to your app, run the following command at the root of your `web` app:
+#### Develop
 
 ```bash
-pnpm dlx shadcn@latest add button -c apps/web
+# Will run the development server for all the app & packages with the supported `dev` script.
+pnpm run dev
 ```
 
-This will place the ui components in the `packages/ui/src/components` directory.
+#### test
 
-## Using components
+```bash
+# Will launch a test suites for all the app & packages with the supported `test` script.
+pnpm run test
 
-To use the components in your app, import them from the `ui` package.
+# You can launch e2e testes with `test:e2e`
+pnpm run test:e2e
 
-```tsx
-import { Button } from "@workspace/ui/components/ui/button"
+# See `@repo/jest-config` to customize the behavior.
 ```
 
-## Functionality
+#### Lint
 
-- Create New user from Register page
-- Login to app using credentials from Login page
-- Go to Settings page and invite a new user
-- Copy the invitation URL and register the user (either in another browser or in incognito mode)
-- Login using new user credentials from Login page
+```bash
+# Will lint all the app & packages with the supported `lint` script.
+# See `@repo/eslint-config` to customize the behavior.
+pnpm run lint
+```
 
-- NOTE: Now you have successfully created an admin user as well as a regular user.
+#### Format
 
-## Features
+```bash
+# Will format all the supported `.ts,.js,json,.tsx,.jsx` files.
+# See `@repo/eslint-config/prettier-base.js` to customize the behavior.
+pnpm format
+```
 
-**Core Architecture**
-- Next.js 15 with Turbopack
-- Monorepo setup using Turborepo
-- Shared ESLint/TypeScript configs
+### Remote Caching
 
-**Functionality**
-- Authentication (NextAuth.js)
-- Form validation with Zod + react-hook-form
-- Data visualization with Recharts
+> [!TIP]
+> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
 
+Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
 
-## Packages 
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
 
-- Next.js 15
-- NestJS 11
-- shadcn/ui
-- next-auth
-- passport
-- TypeORM
+```bash
+npx turbo login
+```
 
-## License
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
 
-Superepo is released under the [MIT License](https://opensource.org/licenses/MIT).
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+```bash
+npx turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
+- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
+- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
+- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
+- [Configuration Options](https://turborepo.com/docs/reference/configuration)
+- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)

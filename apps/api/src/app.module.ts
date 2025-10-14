@@ -1,41 +1,19 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { TenantsModule } from './tenants/tenants.module';
-import { User } from './users/user.entity';
-import { Tenant } from './tenants/tenant.entity';
-import { Invitation } from './tenants/invitation.entity';
-import { PassportModule } from '@nestjs/passport';
+
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { HealthController } from './health.controller';
+import { AppLoggerModule } from './logger.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: +configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        ssl: configService.get('DB_SSL') === 'true',
-        autoLoadEntities: true,
-        synchronize: configService.get('NODE_ENV') !== 'production',
-        logging: configService.get('NODE_ENV') !== 'production',
-      }),
-      inject: [ConfigService],
-    }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    AuthModule,
-    UsersModule,
-    TenantsModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    AppLoggerModule,
+    PrismaModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController, HealthController],
+  providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
