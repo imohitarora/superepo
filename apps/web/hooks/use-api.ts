@@ -1,10 +1,37 @@
+import { useMemo } from 'react';
 import {
   useQuery,
   useMutation,
   UseQueryOptions,
   UseMutationOptions,
+  UseQueryResult,
 } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'Admin' | 'Manager' | 'Contributor';
+  status: 'Active' | 'Invited' | 'Suspended';
+  team: string;
+  lastLogin: string;
+};
+
+export type UsersResponse = {
+  data: User[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type UsersQueryParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  role?: string[];
+  status?: string[];
+};
 
 // Example: Health check query
 export function useHealthCheck(
@@ -39,4 +66,44 @@ export function useApiQuery<TData = unknown>(
     queryFn,
     ...options,
   });
+}
+
+export function useUsers(
+  params: UsersQueryParams,
+  options?: Omit<UseQueryOptions<UsersResponse, ApiError>, 'queryKey' | 'queryFn'>
+): UseQueryResult<UsersResponse, ApiError> {
+  const queryKey = useMemo(() => ['users', params] as const, [params]);
+
+  return useQuery<UsersResponse, ApiError>({
+    queryKey,
+    queryFn: () => api.get<UsersResponse>(`/users${buildQueryString(params)}`),
+    staleTime: 30_000,
+    placeholderData: (previous) => previous,
+    ...options,
+  });
+}
+
+function buildQueryString(params: UsersQueryParams) {
+  const searchParams = new URLSearchParams();
+
+  const page = params.page ?? 1;
+  const pageSize = params.pageSize ?? 20;
+
+  searchParams.set('page', String(page));
+  searchParams.set('pageSize', String(pageSize));
+
+  if (params.search) {
+    searchParams.set('search', params.search);
+  }
+
+  params.role?.forEach((value) => {
+    searchParams.append('role', value);
+  });
+
+  params.status?.forEach((value) => {
+    searchParams.append('status', value);
+  });
+
+  const serialized = searchParams.toString();
+  return serialized ? `?${serialized}` : '';
 }
